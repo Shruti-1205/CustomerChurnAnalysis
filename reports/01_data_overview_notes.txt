@@ -1,0 +1,2 @@
+- Found blank-like values (empty or whitespace) in object columns.
+- Found object columns that appear numeric-like and may need type conversion: TotalCharges

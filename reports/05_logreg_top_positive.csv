@@ -1,0 +1,16 @@
+feature,coef
+InternetService_Fiber optic,1.0778614242223725
+is_new_customer,0.5273349178850354
+is_month_to_month,0.4252378047998811
+customer_value_segment_Low Value,0.37676340472202224
+tenure_group_48-60,0.3038958548536532
+monthly_charge_group_Very High,0.27689146585689955
+PaymentMethod_Electronic check,0.25027035162711414
+tenure_group_60-72,0.23798296681932155
+Contract_One year,0.22594129672282293
+Contract_Month-to-month,0.15248187197009877
+StreamingMovies_Yes,0.12879116986816297
+StreamingTV_Yes,0.11565553904593484
+OnlineSecurity_No,0.11462887113490267
+MultipleLines_Yes,0.11055788080015325
+paperless_billing_flag,0.08672312089881944

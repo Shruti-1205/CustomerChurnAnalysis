@@ -1,0 +1,5 @@
+risk_band,customers,avg_churn_probability,predicted_churn_rate,actual_churn_rate,expected_revenue_at_risk
+Critical,384,84.73,100.0,88.28,78890.91
+High,1089,60.92,100.0,62.81,717017.06
+Low,4027,8.33,0.0,7.45,957249.71
+Medium,1543,35.61,62.86,35.39,1111328.0

@@ -1,0 +1,16 @@
+feature,coef
+InternetService_No,-1.1314792459335261
+tenure_group_0-12,-0.784076443564184
+tenure,-0.5351136332726352
+Contract_Two year,-0.4856654755856668
+MonthlyCharges,-0.3128728816269597
+customer_value_segment_Very High Value,-0.26016058443267565
+monthly_charge_group_Low,-0.2546994305208264
+StreamingMovies_No,-0.23603347676090963
+StreamingTV_No,-0.22289784593868
+OnlineSecurity_Yes,-0.22187117802765471
+MultipleLines_No,-0.21780018769289636
+TechSupport_Yes,-0.19164224083215145
+customer_value_segment_High Value,-0.17643286543589173
+PaymentMethod_Bank transfer (automatic),-0.13564411696422554
+PaymentMethod_Credit card (automatic),-0.11883693095926921

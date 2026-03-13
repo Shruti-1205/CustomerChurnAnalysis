@@ -1,0 +1,2 @@
+model_name,threshold,actual_churn_rate_pct,predicted_churn_rate_pct,avg_churn_probability_pct,total_expected_revenue_at_risk
+HGB_tuned_calibrated,0.3143,26.54,34.69,26.6,2864485.68

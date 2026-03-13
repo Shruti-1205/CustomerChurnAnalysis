@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+
+# Large datasets
+data/raw/*
+!data/raw/.gitkeep
+
+# Local config
+*.env
+
+# Tableau temp
+*.twbr
+*.log
