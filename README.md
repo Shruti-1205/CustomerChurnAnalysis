@@ -1,319 +1,192 @@
-# Customer Churn Intelligence Platform
+# Telecom Customer Churn Intelligence Platform
 
-An end-to-end machine learning and analytics project focused on **predicting telecom customer churn, identifying high-risk customers, and estimating potential revenue loss**.
-
-The project combines **data analysis, predictive modeling, and business-focused insights** to help organizations proactively retain customers.
-
-This repository demonstrates a full **data science workflow** from raw data exploration to production-style model evaluation and explainability.
+> End-to-end churn analysis and prediction for a telecom company with 7,043 customers.
+> Combines descriptive analytics, SQL, machine learning, and an interactive Streamlit app
+> to answer: **who will leave, when, and what it costs.**
 
 ---
 
-# Project Objectives
+## Key Results
 
-Customer churn significantly impacts revenue for subscription-based businesses.
-
-This project aims to:
-
-• Analyze customer behavior and service usage patterns
-• Identify key drivers of churn
-• Build predictive models to estimate churn probability
-• Segment customers by risk level
-• Estimate expected revenue at risk
-• Provide actionable insights for retention strategies
-
----
-
-# Dataset
-
-This project uses the **Telco Customer Churn dataset**, containing customer demographics, service usage, billing information, and churn labels.
-
-Key characteristics:
-
-| Metric    | Value            |
-| --------- | ---------------- |
-| Customers | 7,043            |
-| Features  | 21               |
-| Target    | Churn (Yes / No) |
-
-Feature categories include:
-
-**Customer demographics**
-
-* Gender
-* Senior citizen status
-* Partner / dependents
-
-**Service information**
-
-* Internet service
-* Phone service
-* Streaming services
-* Tech support
-
-**Billing details**
-
-* Contract type
-* Payment method
-* Monthly charges
-* Total charges
+| Metric | Value |
+|--------|-------|
+| Overall churn rate | 26.54% |
+| Revenue at risk | $2.86M / month (17.83% of total) |
+| Month-to-month churn rate | 42.71% vs. 2.83% for two-year contracts |
+| First-year churn rate | 48.28% |
+| Critical-risk customers | 384 (88.28% actual churn rate) |
+| Model ROC-AUC | 0.8448 |
+| Optimised threshold | 0.3143 (recall: 77.0%) |
 
 ---
 
-# Project Structure
+## Live Demo
+
+```bash
+# 1. Train and save the model
+python models/train_and_save.py
+
+# 2. Launch the Streamlit dashboard
+streamlit run app/app.py
+```
+
+The app has 5 pages: Executive Overview · Segment Analysis · Risk Intelligence · Customer Lookup · **Live Churn Predictor**
+
+---
+
+## Tech Stack
+
+| Layer | Tools |
+|-------|-------|
+| Data processing | Python, pandas, numpy |
+| Machine learning | scikit-learn (HGB, Logistic Regression, calibration, cross-validation) |
+| SQL | SQLite — window functions, CTEs, financial modelling |
+| Visualisation | matplotlib, seaborn, Altair |
+| Dashboard | Streamlit |
+| BI tool | Tableau Public |
+| Storage | SQLite (`sql/churn.db`), CSV flat files |
+
+---
+
+## How to Run
+
+### Prerequisites
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 1 — Train and save the model
+
+```bash
+python models/train_and_save.py
+```
+
+Produces `models/churn_model.pkl` and `models/model_metadata.json`.
+
+### Step 2 — Build the SQL database
+
+```bash
+python sql/00_setup_database.py
+```
+
+Loads all 10 processed CSVs into `sql/churn.db`.
+
+### Step 3 — Generate saved charts
+
+```bash
+python reports/figures/generate_charts.py
+```
+
+Saves 6 PNG charts to `reports/figures/`.
+
+### Step 4 — Launch the Streamlit app
+
+```bash
+streamlit run app/app.py
+```
+
+### Step 5 — Run SQL queries (optional)
+
+Open `sql/churn.db` in DB Browser for SQLite, or run from the terminal:
+
+```bash
+sqlite3 sql/churn.db < sql/queries/02_revenue_at_risk.sql
+```
+
+---
+
+## Key Findings
+
+1. **Contract type is the strongest behavioural predictor** — Month-to-month customers churn at 42.71% vs. 2.83% for two-year contracts, a 15× difference
+2. **The first 12 months are critical** — 48.28% of new customers churn before their first anniversary; this drops to 8.3% after 5 years
+3. **$2.86M/month in revenue is recoverable** — targeted intervention on High + Critical risk customers yields positive ROI (see `sql/queries/08_retention_roi_estimate.sql`)
+4. **Fiber optic + no security bundle = red flag** — top 3 features by importance: tenure, month-to-month flag, internet service type
+
+---
+
+## Project Structure
 
 ```
-CustomerChurnAnalysis
-│
-├── data
-│   ├── raw
-│   └── processed
-│
-├── notebooks
-│   ├── 01_data_cleaning.ipynb
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03_eda.ipynb
-│   ├── 04_dashboard_tables.ipynb
-│   └── 05_churn_model.ipynb
-│
-├── reports
-│   ├── model_outputs
-│   └── feature_importance
-│
+customer-churn-platform/
+├── data/
+│   ├── raw/
+│   │   └── WA_Fn-UseC_-Telco-Customer-Churn.csv   # Source: 7,043 customers, 21 features
+│   └── processed/
+│       ├── cleaned_churn_data.csv                  # After cleaning & type fixes
+│       ├── analytics_ready_churn_data.csv          # + 7 engineered features (28 cols)
+│       └── dashboard_tables/                       # Aggregated outputs for viz & SQL
+│           ├── customer_predictions.csv            # All 7,043 rows + ML scores (32 cols)
+│           ├── top_50_high_risk_customers.csv      # Immediate action list
+│           ├── kpi_summary.csv
+│           ├── churn_by_contract.csv
+│           ├── churn_by_tenure.csv
+│           ├── churn_by_charge.csv
+│           ├── churn_by_value.csv
+│           ├── risk_band_summary.csv
+│           ├── revenue_summary.csv
+│           └── pred_kpis.csv
+├── notebooks/
+│   ├── 01_data_overview.ipynb                      # EDA & data profiling
+│   ├── 02_clean_and_validate.ipynb                 # Cleaning & type correction
+│   ├── 03_feature_engineering.ipynb                # 7 engineered features
+│   ├── 04_dashboard_tables.ipynb                   # Aggregation for BI
+│   └── 05_churn_model.ipynb                        # Model training & evaluation
+├── models/
+│   ├── train_and_save.py                           # Retrain + save model artifacts
+│   ├── churn_model.pkl                             # Saved model (after running script)
+│   └── model_metadata.json                         # Threshold, metrics, feature list
+├── sql/
+│   ├── 00_setup_database.py                        # Build churn.db from CSVs
+│   ├── churn.db                                    # SQLite database (after running script)
+│   └── queries/
+│       ├── 01_churn_by_segment.sql                 # Multi-dimension GROUP BY
+│       ├── 02_revenue_at_risk.sql                  # CTE + window percentage
+│       ├── 03_contract_retention_analysis.sql      # CASE WHEN business labels
+│       ├── 04_tenure_cohort_analysis.sql           # LAG window function
+│       ├── 05_high_risk_customer_profile.sql       # Conditional aggregation
+│       ├── 06_payment_method_risk.sql              # ROW_NUMBER OVER PARTITION BY
+│       ├── 07_service_bundle_analysis.sql          # Engineered feature analysis
+│       └── 08_retention_roi_estimate.sql           # Financial modelling in SQL
+├── app/
+│   ├── app.py                                      # 5-page Streamlit dashboard
+│   └── utils.py                                    # Cached data loaders
+├── reports/
+│   ├── executive_summary.md                        # 1-page business findings
+│   ├── 01_data_overview_columns.csv
+│   ├── 05_model_compare.csv
+│   ├── 05_logreg_top_positive.csv
+│   ├── 05_logreg_top_negative.csv
+│   ├── 05_perm_importance.csv
+│   └── figures/
+│       ├── generate_charts.py                      # Produces all 6 PNGs
+│       ├── 01_churn_by_contract.png
+│       ├── 02_churn_by_tenure.png
+│       ├── 03_churn_by_value_segment.png
+│       ├── 04_feature_importance.png
+│       ├── 05_risk_band_distribution.png
+│       └── 06_revenue_at_risk.png
+├── dashboards/                                     # Tableau workbook (see link above)
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-# Data Science Workflow
+## SQL Highlights
 
-The project follows a structured machine learning pipeline.
+The 8 queries in `sql/queries/` demonstrate production-level SQL skills:
 
-## 1 Data Cleaning
-
-Handled:
-
-• missing values
-• inconsistent numeric fields
-• categorical normalization
-• feature formatting
-
-Ensured the dataset was ready for both analysis and modeling.
+- **Window functions** — `LAG()` for period-over-period churn delta, `ROW_NUMBER() OVER PARTITION BY` for within-group ranking
+- **CTEs** — chained `WITH` clauses for readable multi-step calculations
+- **Conditional aggregation** — `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` for cross-tabulated metrics
+- **Business financial modelling** — Query 08 estimates the ROI of a retention discount programme entirely in SQL
 
 ---
 
-## 2 Feature Engineering
-
-Created several business-relevant features including:
-
-• tenure groups
-• service usage counts
-• customer value segmentation
-• monthly charge categories
-
-These engineered features help capture **customer lifecycle behavior and engagement level**.
-
----
-
-## 3 Exploratory Data Analysis
-
-EDA explored relationships between churn and:
-
-• contract type
-• tenure duration
-• pricing tiers
-• service adoption
-
-These insights informed feature selection and model design.
-
----
-
-# Machine Learning Modeling
-
-Multiple models were implemented and evaluated.
-
-## Baseline Model
-
-**Logistic Regression**
-
-Advantages:
-
-• highly interpretable
-• strong baseline performance
-• easy explanation of churn drivers
-
-Used with:
-
-* class balancing
-* feature scaling
-* one-hot encoding
-
----
-
-## Advanced Model
-
-**Histogram Gradient Boosting Classifier**
-
-Enhancements applied:
-
-• hyperparameter tuning with randomized search
-• stratified cross-validation
-• probability calibration (isotonic regression)
-• optimized classification threshold
-
-This approach improves prediction stability and probability quality.
-
----
-
-# Model Evaluation
-
-Performance was evaluated using metrics suited for imbalanced classification:
-
-| Metric            | Purpose                  |
-| ----------------- | ------------------------ |
-| ROC-AUC           | overall ranking ability  |
-| Average Precision | precision-recall balance |
-| F1 Score          | balanced classification  |
-
-Example results:
-
-| Model                   | ROC-AUC | Avg Precision |
-| ----------------------- | ------- | ------------- |
-| Logistic Regression     | ~0.845  | ~0.651        |
-| Tuned Gradient Boosting | ~0.845  | ~0.653        |
-
-These results indicate strong predictive capability while maintaining model interpretability.
-
----
-
-# Model Explainability
-
-Two explainability approaches were used:
-
-### Logistic Regression Coefficients
-
-Identify features that increase or decrease churn risk.
-
-### Permutation Feature Importance
-
-Measures how model accuracy changes when each feature is randomly shuffled.
-
-This highlights the **most influential drivers of churn**.
-
-Typical drivers include:
-
-• contract type
-• tenure length
-• monthly charges
-• internet service type
-• payment method
-
----
-
-# Customer Risk Scoring
-
-The final model produces **churn probabilities for every customer**.
-
-Customers are categorized into risk bands:
-
-| Risk Band | Probability Range |
-| --------- | ----------------- |
-| Low       | < 0.25            |
-| Medium    | 0.25 – 0.50       |
-| High      | 0.50 – 0.75       |
-| Critical  | > 0.75            |
-
-This segmentation enables targeted retention campaigns.
-
----
-
-# Revenue Impact Estimation
-
-For each customer:
-
-```
-Expected Revenue at Risk = Churn Probability × Total Charges
-```
-
-This allows the business to estimate **potential revenue exposure** due to churn.
-
----
-
-# Outputs Generated
-
-The modeling pipeline produces datasets for downstream analytics:
-
-• customer-level churn probabilities
-• predicted churn labels
-• risk band segmentation
-• expected revenue at risk
-
-These outputs are designed for integration with **business intelligence dashboards**.
-
----
-
-# Upcoming Dashboard Layer
-
-The next phase of the project will integrate these predictions into an **interactive Tableau dashboard**.
-
-Planned analytics include:
-
-• churn risk distribution across customer segments
-• revenue exposure by risk band
-• model driver visualization
-• high-risk customer identification
-
-This layer will translate the ML outputs into **actionable business insights**.
-
----
-
-# Technologies Used
-
-Programming & Data Science:
-
-• Python
-• Pandas
-• NumPy
-• Scikit-learn
-
-Machine Learning:
-
-• Logistic Regression
-• Histogram Gradient Boosting
-• Probability Calibration
-• Permutation Feature Importance
-
-Analytics & Visualization:
-
-• Jupyter Notebooks
-• Tableau (planned)
-
-Version Control:
-
-• Git
-• GitHub
-
----
-
-# Business Impact
-
-This project demonstrates how machine learning can support **proactive customer retention strategies**.
-
-Organizations can use these insights to:
-
-• identify customers likely to churn
-• prioritize retention efforts
-• estimate financial exposure
-• understand key drivers of churn behavior
-
----
-
-# Future Improvements
-
-Potential enhancements include:
-
-• SHAP-based explainability
-• customer lifetime value modeling
-• retention campaign simulation
-• deployment as a REST API service
-• real-time scoring pipeline
+## Analytical Questions Answered
+
+- What factors cause customer churn?
+- Which customers are at highest risk right now?
+- How much revenue is at risk, and which bands are recoverable?
+- Which customer segments need retention strategies, and what is the ROI?
