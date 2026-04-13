@@ -22,13 +22,10 @@
 
 ## Live Demo
 
-```bash
-# 1. Train and save the model
-python models/train_and_save.py
-
-# 2. Launch the Streamlit dashboard
-streamlit run app/app.py
-```
+| | Link |
+|---|---|
+| Streamlit App | [Open App](https://your-app-name.streamlit.app) |
+| Tableau Dashboard | [View Dashboard](https://public.tableau.com/your-dashboard-link) |
 
 The app has 5 pages: Executive Overview · Segment Analysis · Risk Intelligence · Customer Lookup · **Live Churn Predictor**
 
