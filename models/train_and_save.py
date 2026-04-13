@@ -5,7 +5,11 @@ Replicates the pipeline from notebooks/05_churn_model.ipynb using the
 best hyperparameters found via RandomizedSearchCV, fits on the full
 dataset, then saves model artifacts for use by the Streamlit app.
 
-Usage:
+Can be run as a script OR imported and called programmatically:
+    from models.train_and_save import run
+    run()
+
+Usage (CLI):
     python models/train_and_save.py
 """
 
@@ -28,109 +32,110 @@ PROJECT_ROOT = Path(__file__).parent.parent
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 MODELS_DIR = Path(__file__).parent
 
-DATA_PATH = PROCESSED_DIR / "analytics_ready_churn_data.csv"
+DATA_PATH  = PROCESSED_DIR / "analytics_ready_churn_data.csv"
 MODEL_PATH = MODELS_DIR / "churn_model.pkl"
-META_PATH = MODELS_DIR / "model_metadata.json"
+META_PATH  = MODELS_DIR / "model_metadata.json"
 
-# ---------------------------------------------------------------------------
-# Load data (already cleaned + feature-engineered by notebooks 02 & 03)
-# ---------------------------------------------------------------------------
-print("Loading data...")
-df = pd.read_csv(DATA_PATH)
-print(f"  {df.shape[0]:,} rows, {df.shape[1]} columns")
 
-drop_cols = [c for c in df.columns if c.lower() in ["customerid", "customer_id"]]
-X = df.drop(columns=["Churn"] + drop_cols)
-y = df["Churn"].astype(int)
+def run(verbose: bool = True) -> None:
+    """Train the churn model and save artifacts to models/."""
 
-print(f"  Features: {X.shape[1]} | Target churn rate: {y.mean():.2%}")
+    def log(msg: str) -> None:
+        if verbose:
+            print(msg)
 
-# ---------------------------------------------------------------------------
-# Feature identification (mirrors notebook 05 logic exactly)
-# ---------------------------------------------------------------------------
-numeric_features = [c for c in X.columns if pd.api.types.is_numeric_dtype(X[c])]
-categorical_features = [c for c in X.columns if c not in numeric_features]
+    # -----------------------------------------------------------------------
+    # Load data
+    # -----------------------------------------------------------------------
+    log("Loading data...")
+    df = pd.read_csv(DATA_PATH)
+    log(f"  {df.shape[0]:,} rows, {df.shape[1]} columns")
 
-print(f"  Numeric features ({len(numeric_features)}): {numeric_features}")
-print(f"  Categorical features ({len(categorical_features)}): {categorical_features}")
+    drop_cols = [c for c in df.columns if c.lower() in ["customerid", "customer_id"]]
+    X = df.drop(columns=["Churn"] + drop_cols)
+    y = df["Churn"].astype(int)
 
-# ---------------------------------------------------------------------------
-# Preprocessing pipeline
-# ---------------------------------------------------------------------------
-numeric_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="median")),
-    ("scaler", StandardScaler()),
-])
+    log(f"  Features: {X.shape[1]} | Churn rate: {y.mean():.2%}")
 
-categorical_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="most_frequent")),
-    ("onehot", OneHotEncoder(handle_unknown="ignore")),
-])
+    # -----------------------------------------------------------------------
+    # Feature identification
+    # -----------------------------------------------------------------------
+    numeric_features    = [c for c in X.columns if pd.api.types.is_numeric_dtype(X[c])]
+    categorical_features = [c for c in X.columns if c not in numeric_features]
 
-preprocess = ColumnTransformer(transformers=[
-    ("num", numeric_transformer, numeric_features),
-    ("cat", categorical_transformer, categorical_features),
-], remainder="drop")
+    # -----------------------------------------------------------------------
+    # Preprocessing pipeline
+    # -----------------------------------------------------------------------
+    numeric_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler",  StandardScaler()),
+    ])
+    categorical_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot",  OneHotEncoder(handle_unknown="ignore")),
+    ])
+    preprocess = ColumnTransformer(transformers=[
+        ("num", numeric_transformer,    numeric_features),
+        ("cat", categorical_transformer, categorical_features),
+    ], remainder="drop")
 
-# ---------------------------------------------------------------------------
-# Model — best hyperparameters from notebook 05 RandomizedSearchCV
-# ---------------------------------------------------------------------------
-hgb = HistGradientBoostingClassifier(
-    random_state=42,
-    learning_rate=0.03,
-    max_depth=2,
-    max_leaf_nodes=31,
-    min_samples_leaf=10,
-    l2_regularization=1.0,
-    max_iter=400,
-)
+    # -----------------------------------------------------------------------
+    # Model — best hyperparameters from notebook 05 RandomizedSearchCV
+    # -----------------------------------------------------------------------
+    hgb = HistGradientBoostingClassifier(
+        random_state=42,
+        learning_rate=0.03,
+        max_depth=2,
+        max_leaf_nodes=31,
+        min_samples_leaf=10,
+        l2_regularization=1.0,
+        max_iter=400,
+    )
+    hgb_pipe = Pipeline(steps=[
+        ("preprocess", preprocess),
+        ("model",      hgb),
+    ])
+    calibrated_model = CalibratedClassifierCV(
+        estimator=hgb_pipe,
+        method="isotonic",
+        cv=3,
+    )
 
-hgb_pipe = Pipeline(steps=[
-    ("preprocess", preprocess),
-    ("model", hgb),
-])
+    # -----------------------------------------------------------------------
+    # Fit on full dataset
+    # -----------------------------------------------------------------------
+    log("\nTraining calibrated HGB model on full dataset...")
+    calibrated_model.fit(X, y)
+    log("  Training complete.")
 
-calibrated_model = CalibratedClassifierCV(
-    estimator=hgb_pipe,
-    method="isotonic",
-    cv=3,
-)
+    # -----------------------------------------------------------------------
+    # Save model artifact
+    # -----------------------------------------------------------------------
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(calibrated_model, MODEL_PATH)
+    log(f"\nModel saved:    {MODEL_PATH}")
 
-# ---------------------------------------------------------------------------
-# Fit on full dataset (same as final_model.fit(X, y) in notebook 05)
-# ---------------------------------------------------------------------------
-print("\nTraining calibrated HGB model on full dataset...")
-calibrated_model.fit(X, y)
-print("  Training complete.")
+    # -----------------------------------------------------------------------
+    # Save metadata (threshold + TotalCharges quantiles for feature engineering)
+    # -----------------------------------------------------------------------
+    tc_quantiles = df["TotalCharges"].quantile([0.25, 0.5, 0.75]).tolist()
 
-# ---------------------------------------------------------------------------
-# Save model artifact
-# ---------------------------------------------------------------------------
-joblib.dump(calibrated_model, MODEL_PATH)
-print(f"\nModel saved: {MODEL_PATH}")
+    metadata = {
+        "model_name":              "HGB_tuned_calibrated",
+        "threshold":               0.31434675005907337,
+        "roc_auc":                 0.8448,
+        "avg_precision":           0.6532,
+        "total_charges_quantiles": tc_quantiles,
+        "numeric_features":        numeric_features,
+        "categorical_features":    categorical_features,
+        "feature_columns":         list(X.columns),
+    }
 
-# ---------------------------------------------------------------------------
-# Save metadata
-# ---------------------------------------------------------------------------
-# Store TotalCharges quartile boundaries so the Streamlit predictor can
-# replicate the customer_value_segment logic from notebook 03 (pd.qcut)
-tc_quantiles = df["TotalCharges"].quantile([0.25, 0.5, 0.75]).tolist()
+    with open(META_PATH, "w") as f:
+        json.dump(metadata, f, indent=2)
 
-metadata = {
-    "model_name": "HGB_tuned_calibrated",
-    "threshold": 0.31434675005907337,
-    "roc_auc": 0.8448,
-    "avg_precision": 0.6532,
-    "total_charges_quantiles": tc_quantiles,
-    "numeric_features": numeric_features,
-    "categorical_features": categorical_features,
-    "feature_columns": list(X.columns),
-}
+    log(f"Metadata saved: {META_PATH}")
 
-with open(META_PATH, "w") as f:
-    json.dump(metadata, f, indent=2)
 
-print(f"Metadata saved: {META_PATH}")
-print("\nDone. Artifacts created:")
-print(f"  {MODEL_PATH.relative_to(PROJECT_ROOT)}")
-print(f"  {META_PATH.relative_to(PROJECT_ROOT)}")
+if __name__ == "__main__":
+    run()

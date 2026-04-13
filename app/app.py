@@ -390,15 +390,15 @@ elif page == "Churn Predictor":
         "trained HGB Calibrated model (ROC-AUC: 0.8448)"
     )
 
-    # Check model exists
+    # Auto-train if model artifacts are missing (e.g. first run on Streamlit Cloud)
     if not model_path().exists():
-        st.error(
-            "Model file not found. Run the following command first:\n\n"
-            "```\npython models/train_and_save.py\n```"
-        )
-        st.stop()
+        with st.spinner("Training model for the first time — this takes about 30 seconds..."):
+            sys.path.insert(0, str(Path(__file__).parent.parent / "models"))
+            from train_and_save import run as _train
+            _train(verbose=False)
+        st.success("Model trained and saved. Ready to predict!")
 
-    # Load model + metadata (cached)
+    # Load model + metadata (cached so re-renders don't reload from disk)
     @st.cache_resource
     def load_model():
         return joblib.load(model_path())
