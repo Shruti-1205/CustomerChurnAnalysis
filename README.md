@@ -9,8 +9,8 @@ Built to answer: who will leave, when, and what it costs.
 
 | | Link |
 |---|---|
-| Streamlit App | [Open App](https://your-app-name.streamlit.app) |
-| Tableau Dashboard | [View Dashboard](https://public.tableau.com/your-dashboard-link) |
+| Streamlit App | [Open App](https://telcocustomerchurnanalysis.streamlit.app) |
+| Tableau Dashboard | [View Dashboard]([https://public.tableau.com/your-dashboard-link](https://public.tableau.com/app/profile/shruti.liladhar.devlekar/viz/Customer_Churn_and_Revenue_Overview/Dashboard1)) |
 
 ---
 
