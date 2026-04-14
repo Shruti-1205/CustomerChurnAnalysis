@@ -1,8 +1,16 @@
-# Telecom Customer Churn Intelligence Platform
+# Telecom Customer Churn Analysis
 
-> End-to-end churn analysis and prediction for a telecom company with 7,043 customers.
-> Combines descriptive analytics, SQL, machine learning, and an interactive Streamlit app
-> to answer: **who will leave, when, and what it costs.**
+End-to-end churn analysis and prediction for a telecom company with 7,043 customers.
+Built to answer: who will leave, when, and what it costs.
+
+---
+
+## Live Demo
+
+| | Link |
+|---|---|
+| Streamlit App | [Open App](https://your-app-name.streamlit.app) |
+| Tableau Dashboard | [View Dashboard](https://public.tableau.com/your-dashboard-link) |
 
 ---
 
@@ -20,72 +28,54 @@
 
 ---
 
-## Live Demo
-
-| | Link |
-|---|---|
-| Streamlit App | [Open App](https://your-app-name.streamlit.app) |
-| Tableau Dashboard | [View Dashboard](https://public.tableau.com/your-dashboard-link) |
-
-The app has 5 pages: Executive Overview · Segment Analysis · Risk Intelligence · Customer Lookup · **Live Churn Predictor**
-
----
-
 ## Tech Stack
 
 | Layer | Tools |
 |-------|-------|
 | Data processing | Python, pandas, numpy |
 | Machine learning | scikit-learn (HGB, Logistic Regression, calibration, cross-validation) |
-| SQL | SQLite — window functions, CTEs, financial modelling |
+| SQL | SQLite |
 | Visualisation | matplotlib, seaborn, Altair |
-| Dashboard | Streamlit |
-| BI tool | Tableau Public |
-| Storage | SQLite (`sql/churn.db`), CSV flat files |
+| App | Streamlit |
+| BI | Tableau Public |
 
 ---
 
 ## How to Run
 
-### Prerequisites
+**Prerequisites**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 1 — Train and save the model
+**Train the model**
 
 ```bash
 python models/train_and_save.py
 ```
 
-Produces `models/churn_model.pkl` and `models/model_metadata.json`.
-
-### Step 2 — Build the SQL database
+**Build the SQL database**
 
 ```bash
 python sql/00_setup_database.py
 ```
 
-Loads all 10 processed CSVs into `sql/churn.db`.
-
-### Step 3 — Generate saved charts
+**Generate charts**
 
 ```bash
 python reports/figures/generate_charts.py
 ```
 
-Saves 6 PNG charts to `reports/figures/`.
-
-### Step 4 — Launch the Streamlit app
+**Launch the Streamlit app**
 
 ```bash
 streamlit run app/app.py
 ```
 
-### Step 5 — Run SQL queries (optional)
+**Run SQL queries (optional)**
 
-Open `sql/churn.db` in DB Browser for SQLite, or run from the terminal:
+Open `sql/churn.db` in DB Browser for SQLite, or run:
 
 ```bash
 sqlite3 sql/churn.db < sql/queries/02_revenue_at_risk.sql
@@ -95,10 +85,10 @@ sqlite3 sql/churn.db < sql/queries/02_revenue_at_risk.sql
 
 ## Key Findings
 
-1. **Contract type is the strongest behavioural predictor** — Month-to-month customers churn at 42.71% vs. 2.83% for two-year contracts, a 15× difference
-2. **The first 12 months are critical** — 48.28% of new customers churn before their first anniversary; this drops to 8.3% after 5 years
-3. **$2.86M/month in revenue is recoverable** — targeted intervention on High + Critical risk customers yields positive ROI (see `sql/queries/08_retention_roi_estimate.sql`)
-4. **Fiber optic + no security bundle = red flag** — top 3 features by importance: tenure, month-to-month flag, internet service type
+1. Month-to-month customers churn at 42.71% compared to 2.83% for two-year contracts.
+2. 48.28% of customers churn within their first 12 months. This drops to 8.3% after 5 years.
+3. Targeted retention for High and Critical risk customers has a positive ROI. See `sql/queries/08_retention_roi_estimate.sql`.
+4. The top 3 churn predictors are tenure, contract type, and internet service type.
 
 ---
 
@@ -108,13 +98,13 @@ sqlite3 sql/churn.db < sql/queries/02_revenue_at_risk.sql
 customer-churn-platform/
 ├── data/
 │   ├── raw/
-│   │   └── WA_Fn-UseC_-Telco-Customer-Churn.csv   # Source: 7,043 customers, 21 features
+│   │   └── WA_Fn-UseC_-Telco-Customer-Churn.csv
 │   └── processed/
-│       ├── cleaned_churn_data.csv                  # After cleaning & type fixes
-│       ├── analytics_ready_churn_data.csv          # + 7 engineered features (28 cols)
-│       └── dashboard_tables/                       # Aggregated outputs for viz & SQL
-│           ├── customer_predictions.csv            # All 7,043 rows + ML scores (32 cols)
-│           ├── top_50_high_risk_customers.csv      # Immediate action list
+│       ├── cleaned_churn_data.csv
+│       ├── analytics_ready_churn_data.csv
+│       └── dashboard_tables/
+│           ├── customer_predictions.csv
+│           ├── top_50_high_risk_customers.csv
 │           ├── kpi_summary.csv
 │           ├── churn_by_contract.csv
 │           ├── churn_by_tenure.csv
@@ -124,66 +114,49 @@ customer-churn-platform/
 │           ├── revenue_summary.csv
 │           └── pred_kpis.csv
 ├── notebooks/
-│   ├── 01_data_overview.ipynb                      # EDA & data profiling
-│   ├── 02_clean_and_validate.ipynb                 # Cleaning & type correction
-│   ├── 03_feature_engineering.ipynb                # 7 engineered features
-│   ├── 04_dashboard_tables.ipynb                   # Aggregation for BI
-│   └── 05_churn_model.ipynb                        # Model training & evaluation
+│   ├── 01_data_overview.ipynb
+│   ├── 02_clean_and_validate.ipynb
+│   ├── 03_feature_engineering.ipynb
+│   ├── 04_dashboard_tables.ipynb
+│   └── 05_churn_model.ipynb
 ├── models/
-│   ├── train_and_save.py                           # Retrain + save model artifacts
-│   ├── churn_model.pkl                             # Saved model (after running script)
-│   └── model_metadata.json                         # Threshold, metrics, feature list
+│   ├── train_and_save.py
+│   └── model_metadata.json
 ├── sql/
-│   ├── 00_setup_database.py                        # Build churn.db from CSVs
-│   ├── churn.db                                    # SQLite database (after running script)
+│   ├── 00_setup_database.py
 │   └── queries/
-│       ├── 01_churn_by_segment.sql                 # Multi-dimension GROUP BY
-│       ├── 02_revenue_at_risk.sql                  # CTE + window percentage
-│       ├── 03_contract_retention_analysis.sql      # CASE WHEN business labels
-│       ├── 04_tenure_cohort_analysis.sql           # LAG window function
-│       ├── 05_high_risk_customer_profile.sql       # Conditional aggregation
-│       ├── 06_payment_method_risk.sql              # ROW_NUMBER OVER PARTITION BY
-│       ├── 07_service_bundle_analysis.sql          # Engineered feature analysis
-│       └── 08_retention_roi_estimate.sql           # Financial modelling in SQL
+│       ├── 01_churn_by_segment.sql
+│       ├── 02_revenue_at_risk.sql
+│       ├── 03_contract_retention_analysis.sql
+│       ├── 04_tenure_cohort_analysis.sql
+│       ├── 05_high_risk_customer_profile.sql
+│       ├── 06_payment_method_risk.sql
+│       ├── 07_service_bundle_analysis.sql
+│       └── 08_retention_roi_estimate.sql
 ├── app/
-│   ├── app.py                                      # 5-page Streamlit dashboard
-│   └── utils.py                                    # Cached data loaders
+│   ├── app.py
+│   └── utils.py
 ├── reports/
-│   ├── executive_summary.md                        # 1-page business findings
-│   ├── 01_data_overview_columns.csv
-│   ├── 05_model_compare.csv
-│   ├── 05_logreg_top_positive.csv
-│   ├── 05_logreg_top_negative.csv
-│   ├── 05_perm_importance.csv
+│   ├── executive_summary.md
 │   └── figures/
-│       ├── generate_charts.py                      # Produces all 6 PNGs
-│       ├── 01_churn_by_contract.png
-│       ├── 02_churn_by_tenure.png
-│       ├── 03_churn_by_value_segment.png
-│       ├── 04_feature_importance.png
-│       ├── 05_risk_band_distribution.png
-│       └── 06_revenue_at_risk.png
-├── dashboards/                                     # Tableau workbook (see link above)
+│       ├── generate_charts.py
+│       └── *.png
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## SQL Highlights
+## SQL Queries
 
-The 8 queries in `sql/queries/` demonstrate production-level SQL skills:
-
-- **Window functions** — `LAG()` for period-over-period churn delta, `ROW_NUMBER() OVER PARTITION BY` for within-group ranking
-- **CTEs** — chained `WITH` clauses for readable multi-step calculations
-- **Conditional aggregation** — `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` for cross-tabulated metrics
-- **Business financial modelling** — Query 08 estimates the ROI of a retention discount programme entirely in SQL
+8 queries covering segmentation, cohort analysis, risk profiling, and retention ROI estimation.
+Concepts used: window functions (`LAG`, `ROW_NUMBER`), CTEs, conditional aggregation, and financial modelling.
 
 ---
 
-## Analytical Questions Answered
+## Analytical Questions
 
 - What factors cause customer churn?
 - Which customers are at highest risk right now?
-- How much revenue is at risk, and which bands are recoverable?
-- Which customer segments need retention strategies, and what is the ROI?
+- How much revenue is at risk?
+- Which segments need retention strategies, and what is the estimated ROI?
